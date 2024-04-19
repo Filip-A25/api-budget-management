@@ -26,6 +26,7 @@ const fetchCategory = async (req, res, next) => {
 
 const fetchCurrency = async (req, res, next) => {
     const {currency} = req.body;
+    console.log(currency);
 
     try {
         await authenticateDatabase(currency_sequelize);

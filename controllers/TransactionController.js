@@ -95,10 +95,10 @@ const createTransaction = async (req, res, next) => {
     try {
         await authenticateDatabase(sequelizeName);
 
-        if (!req.categoryId || !req.currencyId) return res.status(401).json({success: false, message: "Couldnt fetch details."});
         const transaction = Number(flow) === 0 ? new TransactionIncome() : new TransactionExpense();
-        await transaction.createTransaction(formattedData.date, formattedData.desc, formattedData.amount, req.categoryId, req.currencyId, transactor);
+        const queryResult = await transaction.createTransaction(formattedData.date, formattedData.desc, formattedData.amount, Number(category), req.currencyId, transactor);
 
+        if (!queryResult) return res.status(401).json({success: false, message: "Transaction could not be created."});
         res.status(201).json({success: true, message: "Transaction successfully created."});
     } catch (err) {
         res.sendStatus(500);
@@ -132,8 +132,6 @@ const deleteTransaction = async (req, res, next) => {
 
     if (!id) return res.status(401).send("Invalid input.");
     const sequelizeName = Number(flow) === 0 ? transaction_income_sequelize : transaction_expense_sequelize;
-
-    //const tableType = getTableType(Number(flow));
  
     try {
         await authenticateDatabase(sequelizeName);
@@ -146,41 +144,5 @@ const deleteTransaction = async (req, res, next) => {
         res.sendStatus(500);
     }
 }
-
-/*
-const fetchTotal = async (req, res, next) => {
-    const {flow} = req.body;
-
-    if (!flow) return res.sendStatus(400);
-    const tableType = await getTableType(Number(flow));
-
-    if (!tableType || tableType === "") return res.sendStatus(400);
-    
-    try {
-        if (tableType === "transaction_income" || tableType === "transaction_expense") {
-            const total = await Transaction.findAndCountAll({
-                
-            })
-        }
-    }
-    let query;
-    if (tableType === "transaction_income" || tableType === "transaction_expense") {
-        query = {
-            text: "SELECT SUM (amount) FROM $1",
-            values: [tableType]
-        }
-    }
-    if (tableType === "transaction_all") {
-        query = {
-            text: `SELECT SUM (amount) FROM (
-                SELECT "income" AS type, * FROM transaction_income
-                UNION ALL
-                SELECT "expense" AS type, * FROM transaction_expense 
-            ) AS transaction_combined`,
-            values: []
-        }
-    }
-}
-*/
 
 module.exports = {fetchCompleteTransactions, fetchIncomeTransactions, fetchIncomeTransactionsJoined, fetchExpenseTransactionsJoined, fetchExpenseTransactions, createTransaction, updateTransaction, deleteTransaction};
